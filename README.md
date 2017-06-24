@@ -14,3 +14,5 @@ Too soon. Move along.
 ./bin/wof-brands-create -name 'Pok Pok' -root /usr/local/data/whosonfirst-brands/data/
 /usr/local/data/whosonfirst-brands/data/112/612/891/1/1126128911.geojson
 ```
+
+_See the bug in that example? That's why this is "too soon". Move along._
