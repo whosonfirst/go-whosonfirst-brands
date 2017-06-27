@@ -14,8 +14,10 @@ self:   prep
 	cp -r vendor/src/* src/
 
 deps:   
+	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson"
 	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/pretty"
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-brooklynintegers-api"
+	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-crawl"
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-uri"
 
 vendor-deps: rmdeps deps
@@ -31,3 +33,4 @@ fmt:
 
 bin:	self
 	@GOPATH=$(GOPATH) go build -o bin/wof-brands-create cmd/wof-brands-create.go
+	@GOPATH=$(GOPATH) go build -o bin/wof-brands-find cmd/wof-brands-find.go

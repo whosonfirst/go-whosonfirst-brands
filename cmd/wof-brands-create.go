@@ -40,6 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// https://github.com/whosonfirst/go-whosonfirst-brands/issues/1
 	abs_path = strings.Replace(abs_path, ".geojson", ".json", 1)
 
 	abs_root := filepath.Dir(abs_path)
