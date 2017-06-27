@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -38,6 +39,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	abs_path = strings.Replace(abs_path, ".geojson", ".json", 1)
 
 	abs_root := filepath.Dir(abs_path)
 
