@@ -5,8 +5,9 @@ import (
 )
 
 type Brand struct {
-	WOFBrandId int64  `json:"wof:brand_id"`
-	WOFName    string `json:"wof:name"`
+	WOFBrandId   int64  `json:"wof:brand_id"`
+	WOFBrandName string `json:"wof:brand_name"`
+	WOFBrandSize string `json:"wof:brand_size"`
 }
 
 func NewBrand(name string) (*Brand, error) {
@@ -19,8 +20,9 @@ func NewBrand(name string) (*Brand, error) {
 	}
 
 	br := Brand{
-		WOFBrandId: brand_id,
-		WOFName:    name,
+		WOFBrandId:   brand_id,
+		WOFBrandName: name,
+		WOFBrandSize: "",
 	}
 
 	return &br, nil
