@@ -2,8 +2,10 @@ package api
 
 import (
 	"errors"
-	"github.com/jeffail/gabs"
+	"fmt"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
+	_ "log"
 	"net/http"
 	"net/url"
 )
@@ -20,19 +22,38 @@ type APIError struct {
 	Message string
 }
 
+func (e *APIError) Error() string {
+	return fmt.Sprintf("[%d] %s", e.Code, e.Message)
+}
+
 type APIResponse struct {
-	Parsed *gabs.Container
+	raw []byte
 }
 
-func (rsp APIResponse) Stat() string {
+func (rsp *APIResponse) Int() (int64, error) {
 
-	var v string
+	ints := gjson.GetBytes(rsp.raw, "integers.0.integer")
 
-	v, _ = rsp.Parsed.Path("stat").Data().(string)
-	return v
+	if !ints.Exists() {
+		return -1, errors.New("Failed to generate any integers")
+	}
+
+	i := ints.Int()
+	return i, nil
 }
 
-func (rsp APIResponse) Ok() (bool, *APIError) {
+func (rsp *APIResponse) Stat() string {
+
+	r := gjson.GetBytes(rsp.raw, "stat")
+
+	if !r.Exists() {
+		return ""
+	}
+
+	return r.String()
+}
+
+func (rsp *APIResponse) Ok() (bool, error) {
 
 	stat := rsp.Stat()
 
@@ -43,41 +64,25 @@ func (rsp APIResponse) Ok() (bool, *APIError) {
 	return false, rsp.Error()
 }
 
-func (rsp APIResponse) Error() *APIError {
+func (rsp *APIResponse) Error() error {
 
-	var code int64
-	var msg string
+	c := gjson.GetBytes(rsp.raw, "error.code")
+	m := gjson.GetBytes(rsp.raw, "error.message")
 
-	// why does this (lookup for error.code) always return 0?
+	if !c.Exists() {
+		return errors.New("Failed to parse error code")
+	}
 
-	code, _ = rsp.Parsed.Path("error.code").Data().(int64)
-	msg, _ = rsp.Parsed.Path("error.message").Data().(string)
+	if !m.Exists() {
+		return errors.New("Failed to parse error message")
+	}
 
-	err := APIError{Code: code, Message: msg}
+	err := APIError{
+		Code:    c.Int(),
+		Message: m.String(),
+	}
+
 	return &err
-}
-
-func (rsp APIResponse) Body() *gabs.Container {
-	return rsp.Parsed
-}
-
-func (rsp APIResponse) Dumps() string {
-	return rsp.Parsed.String()
-}
-
-func ParseAPIResponse(raw []byte) (*APIResponse, error) {
-
-	parsed, parse_err := gabs.ParseJSON(raw)
-
-	if parse_err != nil {
-		return nil, parse_err
-	}
-
-	rsp := APIResponse{
-		Parsed: parsed,
-	}
-
-	return &rsp, nil
 }
 
 func NewAPIClient() *APIClient {
@@ -92,32 +97,15 @@ func NewAPIClient() *APIClient {
 func (client *APIClient) CreateInteger() (int64, error) {
 
 	params := url.Values{}
-
 	method := "brooklyn.integers.create"
 
 	rsp, err := client.ExecuteMethod(method, &params)
 
 	if err != nil {
-		return 0, err
+		return -1, err
 	}
 
-	ints, _ := rsp.Parsed.S("integers").Children()
-
-	if len(ints) == 0 {
-		return 0, errors.New("Failed to generate any integers")
-	}
-
-	first := ints[0]
-
-	f, ok := first.Path("integer").Data().(float64)
-
-	if !ok {
-		return 0, errors.New("Failed to parse response")
-	}
-
-	i := int64(f)
-
-	return i, nil
+	return rsp.Int()
 }
 
 func (client *APIClient) ExecuteMethod(method string, params *url.Values) (*APIResponse, error) {
@@ -126,36 +114,34 @@ func (client *APIClient) ExecuteMethod(method string, params *url.Values) (*APIR
 
 	params.Set("method", method)
 
-	http_req, req_err := http.NewRequest("POST", url, nil)
+	req, err := http.NewRequest("POST", url, nil)
 
-	if req_err != nil {
-		return nil, req_err
+	if err != nil {
+		return nil, err
 	}
 
-	http_req.URL.RawQuery = (*params).Encode()
+	req.URL.RawQuery = (*params).Encode()
 
-	http_req.Header.Add("Accept-Encoding", "gzip")
+	req.Header.Add("Accept-Encoding", "gzip")
 
-	http_client := &http.Client{}
-	http_rsp, http_err := http_client.Do(http_req)
+	cl := &http.Client{}
+	rsp, err := cl.Do(req)
 
-	if http_err != nil {
-		return nil, http_err
+	if err != nil {
+		return nil, err
 	}
 
-	defer http_rsp.Body.Close()
+	defer rsp.Body.Close()
 
-	http_body, io_err := ioutil.ReadAll(http_rsp.Body)
+	body, err := ioutil.ReadAll(rsp.Body)
 
-	if io_err != nil {
-		return nil, io_err
+	if err != nil {
+		return nil, err
 	}
 
-	rsp, parse_err := ParseAPIResponse(http_body)
-
-	if parse_err != nil {
-		return nil, parse_err
+	r := APIResponse{
+		raw: body,
 	}
 
-	return rsp, nil
+	return &r, nil
 }
