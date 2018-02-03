@@ -19,6 +19,7 @@ deps:
 	# @GOPATH=$(GOPATH) go get -u "github.com/tidwall/pretty"
 	# @GOPATH=$(GOPATH) go get -u "github.com/aaronland/go-brooklynintegers-api"
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-crawl"
+	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-flags"
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-uri"
 
 vendor-deps: rmdeps deps

@@ -3,6 +3,8 @@ package whosonfirst
 import (
 	"encoding/json"
 	"github.com/whosonfirst/go-whosonfirst-brands"
+	"github.com/whosonfirst/go-whosonfirst-flags"
+	"github.com/whosonfirst/go-whosonfirst-flags/existential"
 	"io"
 	"io/ioutil"
 	_ "log"
@@ -17,6 +19,10 @@ type WOFBrand struct {
 	BrandCategories   []string `json:"wof:categories,omitempty"`
 	BrandTags         []string `json:"wof:tags,omitempty"`
 	BrandSize         string   `json:"wof:brand_size"`
+	BrandSupersedes   []int64  `json:"wof:supersedes"`
+	BrandSupersededBy []int64  `json:"wof:superseded_by"`
+	BrandCessation    string   `json:"edtf:cessation,omitempty"`
+	BrandDeprecated   string   `json:"edtf:deprecated,omitempty"`
 	BrandLastModified int      `json:"wof:lastmodified"`
 }
 
@@ -34,6 +40,34 @@ func (b *WOFBrand) Size() string {
 
 func (b *WOFBrand) String() string {
 	return b.Name()
+}
+
+func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
+	return existential.NewKnownUnknownFlag(-1)
+}
+
+func (b *WOFBrand) IsCeased() (flags.ExistentialFlag, error) {
+	return existential.NewKnownUnknownFlag(-1)
+}
+
+func (b *WOFBrand) IsDeprecated() (flags.ExistentialFlag, error) {
+	return existential.NewKnownUnknownFlag(-1)
+}
+
+func (b *WOFBrand) IsSuperseding() (flags.ExistentialFlag, error) {
+	return existential.NewKnownUnknownFlag(-1)
+}
+
+func (b *WOFBrand) IsSuperseded() flags.ExistentialFlag {
+	return existential.NewKnownUnknownFlag(-1)
+}
+
+func (b *WOFBrand) SupersededBy() []int64 {
+	return b.BrandSupersedeBy
+}
+
+func (b *WOFBrand) Supersedes() []int64 {
+	return b.BrandSupersedes
 }
 
 func LoadWOFBrandFromFile(path string) (brands.Brand, error) {
@@ -108,7 +142,6 @@ func UnmarshalBrandFromFile(path string) ([]byte, error) {
 
 	return UnmarshalBrandFromReader(fh)
 }
-
 
 /*
 func NewWOFBrand(name string) (brands.Brand, error) {
