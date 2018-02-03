@@ -1,29 +1,20 @@
 package brands
 
-import (
-	"github.com/whosonfirst/go-brooklynintegers-api"
-)
+import ()
 
-type Brand struct {
-	WOFBrandId   int64  `json:"wof:brand_id"`
-	WOFBrandName string `json:"wof:brand_name"`
-	WOFBrandSize string `json:"wof:brand_size"`
-}
+type Brand interface {
+	Id() int64
+	Name() string
+	Size() string
+	String() string
 
-func NewBrand(name string) (*Brand, error) {
-
-	client := api.NewAPIClient()
-	brand_id, err := client.CreateInteger()
-
-	if err != nil {
-		return nil, err
-	}
-
-	br := Brand{
-		WOFBrandId:   brand_id,
-		WOFBrandName: name,
-		WOFBrandSize: "",
-	}
-
-	return &br, nil
+	/*
+	IsCurrent() flags.ExistentialFlag
+	IsCeased() flags.ExistentialFlag
+	IsDeprecated() flags.ExistentialFlag
+	IsSuperseded() flags.ExistentialFlag
+	IsSuperseding() flags.ExistentialFlag
+	SupersededBy() []int64
+	Supersedes() []int64
+	*/
 }
