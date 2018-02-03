@@ -43,6 +43,43 @@ func (b *WOFBrand) String() string {
 }
 
 func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
+
+	var fl flags.ExistentialFlag
+	var err error
+
+	fl, err = b.IsSuperseded()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if fl.IsTrue() && fl.IsKnown() {
+		return existential.NewKnownUnknownFlag(0)
+	}
+
+	fl, err = b.IsCeased()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if fl.IsTrue() && fl.IsKnown() {
+		return existential.NewKnownUnknownFlag(0)
+	}
+
+	fl, err = b.IsDeprecated()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if fl.IsTrue() && fl.IsKnown() {
+		return existential.NewKnownUnknownFlag(0)
+	}
+
+	// check something in order to return something with "1" with
+	// some amount of confidence
+
 	return existential.NewKnownUnknownFlag(-1)
 }
 
@@ -55,11 +92,25 @@ func (b *WOFBrand) IsDeprecated() (flags.ExistentialFlag, error) {
 }
 
 func (b *WOFBrand) IsSuperseding() (flags.ExistentialFlag, error) {
-	return existential.NewKnownUnknownFlag(-1)
+
+	supersedes := b.Supersedes()
+
+	if len(supersedes) > 0 {
+		return existential.NewKnownUnknownFlag(1)
+	}
+
+	return existential.NewKnownUnknownFlag(0)
 }
 
 func (b *WOFBrand) IsSuperseded() (flags.ExistentialFlag, error) {
-	return existential.NewKnownUnknownFlag(-1)
+
+	superseded_by := b.SupersededBy()
+
+	if len(superseded_by) > 0 {
+		return existential.NewKnownUnknownFlag(1)
+	}
+
+	return existential.NewKnownUnknownFlag(0)
 }
 
 func (b *WOFBrand) SupersededBy() []int64 {
