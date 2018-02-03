@@ -58,12 +58,12 @@ func (b *WOFBrand) IsSuperseding() (flags.ExistentialFlag, error) {
 	return existential.NewKnownUnknownFlag(-1)
 }
 
-func (b *WOFBrand) IsSuperseded() flags.ExistentialFlag {
+func (b *WOFBrand) IsSuperseded() (flags.ExistentialFlag, error) {
 	return existential.NewKnownUnknownFlag(-1)
 }
 
 func (b *WOFBrand) SupersededBy() []int64 {
-	return b.BrandSupersedeBy
+	return b.BrandSupersededBy
 }
 
 func (b *WOFBrand) Supersedes() []int64 {

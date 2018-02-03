@@ -40,7 +40,7 @@ func main() {
 			return err
 		}
 
-		log.Println(br.String())
+		log.Println(br.Id(), br.Name())
 		return nil
 	}
 
