@@ -1,45 +1,41 @@
 package whosonfirst
 
 import (
-	"encoding/json"
 	"github.com/whosonfirst/go-whosonfirst-brands"
 	"github.com/whosonfirst/go-whosonfirst-flags"
 	"github.com/whosonfirst/go-whosonfirst-flags/existential"
+	"github.com/whosonfirst/go-whosonfirst-json"
+	"github.com/whosonfirst/go-whosonfirst-json/utils"		
 	"io"
-	"io/ioutil"
 	_ "log"
 	"os"
 	"path/filepath"
 )
 
 type WOFBrand struct {
-	brands.Brand      `json:",omitempty"`
-	BrandId           int64    `json:"wof:brand_id"`
-	BrandName         string   `json:"wof:brand_name"`
-	BrandCategories   []string `json:"wof:categories,omitempty"`
-	BrandTags         []string `json:"wof:tags,omitempty"`
-	BrandSize         string   `json:"wof:brand_size"`
-	BrandSupersedes   []int64  `json:"wof:supersedes"`
-	BrandSupersededBy []int64  `json:"wof:superseded_by"`
-	BrandCessation    string   `json:"edtf:cessation,omitempty"`
-	BrandDeprecated   string   `json:"edtf:deprecated,omitempty"`
-	BrandLastModified int      `json:"wof:lastmodified"`
+     	json.Document
+	brands.Brand 
+	body []byte
 }
 
 func (b *WOFBrand) Id() int64 {
-	return b.BrandId
+     	return utils.Int64Property(b.body, "wof:brand_id", -1)
 }
 
 func (b *WOFBrand) Name() string {
-	return b.BrandName
+     	return utils.StringProperty(b.body, "wof:brand_name", "")
 }
 
 func (b *WOFBrand) Size() string {
-	return b.BrandSize
+     	return utils.StringProperty(b.body, "wof:brand_size", "")
+}
+
+func (b *WOFBrand) Bytes() []byte {
+	return b.body
 }
 
 func (b *WOFBrand) String() string {
-	return b.Name()
+	return string(b.Bytes())
 }
 
 func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
@@ -142,74 +138,17 @@ func LoadWOFBrandFromFile(path string) (brands.Brand, error) {
 
 func LoadWOFBrandFromReader(fh io.ReadCloser) (brands.Brand, error) {
 
-	body, err := ioutil.ReadAll(fh)
+	body, err := json.UnmarshalDocumentFromReader(fh)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var br WOFBrand
-	err = json.Unmarshal(body, &br)
-
-	if err != nil {
-		return nil, err
+	// check properties here...
+	
+	br := WOFBrand{
+	   body: body,
 	}
 
 	return &br, nil
 }
-
-func UnmarshalBrand(body []byte) ([]byte, error) {
-
-	var stub interface{}
-	err := json.Unmarshal(body, &stub)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
-func UnmarshalBrandFromReader(fh io.Reader) ([]byte, error) {
-
-	body, err := ioutil.ReadAll(fh)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return UnmarshalBrand(body)
-}
-
-func UnmarshalBrandFromFile(path string) ([]byte, error) {
-
-	fh, err := os.Open(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer fh.Close()
-
-	return UnmarshalBrandFromReader(fh)
-}
-
-/*
-func NewWOFBrand(name string) (brands.Brand, error) {
-
-	client := api.NewAPIClient()
-	brand_id, err := client.CreateInteger()
-
-	if err != nil {
-		return nil, err
-	}
-
-	br := Brand{
-		WOFId:   brand_id,
-		WOFName: name,
-		WOFSize: "",
-	}
-
-	return &br, nil
-}
-*/
