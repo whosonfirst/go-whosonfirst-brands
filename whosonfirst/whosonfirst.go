@@ -5,29 +5,53 @@ import (
 	"github.com/whosonfirst/go-whosonfirst-flags"
 	"github.com/whosonfirst/go-whosonfirst-flags/existential"
 	"github.com/whosonfirst/go-whosonfirst-json"
-	"github.com/whosonfirst/go-whosonfirst-json/utils"		
+	"github.com/whosonfirst/go-whosonfirst-json/utils"
 	"io"
 	_ "log"
 	"os"
 	"path/filepath"
 )
 
+func LoadWOFBrandFromFile(path string) (brands.Brand, error) {
+
+	abs_path, err := filepath.Abs(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fh, err := os.Open(abs_path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer fh.Close()
+
+	return LoadWOFBrandFromReader(fh)
+}
+
+func LoadWOFBrandFromReader(fh io.ReadCloser) (brands.Brand, error) {
+
+	body, err := json.UnmarshalDocumentFromReader(fh)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// check properties here...
+
+	br := WOFBrand{
+		body: body,
+	}
+
+	return &br, nil
+}
+
 type WOFBrand struct {
-     	json.Document
-	brands.Brand 
+	json.Document
+	brands.Brand
 	body []byte
-}
-
-func (b *WOFBrand) Id() int64 {
-     	return utils.Int64Property(b.body, "wof:brand_id", -1)
-}
-
-func (b *WOFBrand) Name() string {
-     	return utils.StringProperty(b.body, "wof:brand_name", "")
-}
-
-func (b *WOFBrand) Size() string {
-     	return utils.StringProperty(b.body, "wof:brand_size", "")
 }
 
 func (b *WOFBrand) Bytes() []byte {
@@ -36,6 +60,18 @@ func (b *WOFBrand) Bytes() []byte {
 
 func (b *WOFBrand) String() string {
 	return string(b.Bytes())
+}
+
+func (b *WOFBrand) Id() int64 {
+	return utils.Int64Property(b.body, []string{"wof:brand_id"}, -1)
+}
+
+func (b *WOFBrand) Name() string {
+	return utils.StringProperty(b.body, []string{"wof:brand_name"}, "")
+}
+
+func (b *WOFBrand) Size() string {
+	return utils.StringProperty(b.body, []string{"wof:brand_size"}, "")
 }
 
 func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
@@ -110,45 +146,11 @@ func (b *WOFBrand) IsSuperseded() (flags.ExistentialFlag, error) {
 }
 
 func (b *WOFBrand) SupersededBy() []int64 {
-	return b.BrandSupersededBy
+
+	return utils.Int64PropertyArray(b.body, []string{"wof:superseded_by"})
 }
 
 func (b *WOFBrand) Supersedes() []int64 {
-	return b.BrandSupersedes
-}
 
-func LoadWOFBrandFromFile(path string) (brands.Brand, error) {
-
-	abs_path, err := filepath.Abs(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	fh, err := os.Open(abs_path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer fh.Close()
-
-	return LoadWOFBrandFromReader(fh)
-}
-
-func LoadWOFBrandFromReader(fh io.ReadCloser) (brands.Brand, error) {
-
-	body, err := json.UnmarshalDocumentFromReader(fh)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// check properties here...
-	
-	br := WOFBrand{
-	   body: body,
-	}
-
-	return &br, nil
+	return utils.Int64PropertyArray(b.body, []string{"wof:supersedes"})
 }

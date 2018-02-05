@@ -53,6 +53,27 @@ func Int64Property(body []byte, possible []string, d int64) int64 {
 	return d
 }
 
+func Int64PropertyArray(body []byte, possible []string) []int64 {
+
+	results := make([]int64, 0)
+
+	for _, p := range possible {
+
+		rsp := gjson.GetBytes(body, p)
+
+		if rsp.Exists() {
+
+			for _, id := range rsp.Array() {
+				results = append(results, id.Int())
+			}
+
+			break
+		}
+	}
+
+	return results
+}
+
 func StringProperty(body []byte, possible []string, d string) string {
 
 	for _, path := range possible {
