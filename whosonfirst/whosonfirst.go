@@ -76,6 +76,12 @@ func (b *WOFBrand) Size() string {
 
 func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
 
+	c := utils.Int64Property(b.body, []string{"mz:is_current"}, -1)
+
+	if c == 0 || c == 1 {
+		return existential.NewKnownUnknownFlag(c)
+	}
+
 	var fl flags.ExistentialFlag
 	var err error
 
@@ -116,11 +122,39 @@ func (b *WOFBrand) IsCurrent() (flags.ExistentialFlag, error) {
 }
 
 func (b *WOFBrand) IsCeased() (flags.ExistentialFlag, error) {
-	return existential.NewKnownUnknownFlag(-1)
+
+	c := utils.StringProperty(b.body, []string{"edtf:cessation"}, "")
+
+	var fl int64
+
+	switch c {
+	case "":
+		fl = 0
+	case "uuuu":
+		fl = -1
+	default:
+		fl = 1
+	}
+
+	return existential.NewKnownUnknownFlag(fl)
 }
 
 func (b *WOFBrand) IsDeprecated() (flags.ExistentialFlag, error) {
-	return existential.NewKnownUnknownFlag(-1)
+
+	d := utils.StringProperty(b.body, []string{"edtf:deprecated"}, "")
+
+	var fl int64
+
+	switch d {
+	case "":
+		fl = 0
+	case "uuuu":
+		fl = -1
+	default:
+		fl = 1
+	}
+
+	return existential.NewKnownUnknownFlag(fl)
 }
 
 func (b *WOFBrand) IsSuperseding() (flags.ExistentialFlag, error) {

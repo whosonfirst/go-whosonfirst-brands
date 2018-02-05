@@ -40,7 +40,14 @@ func main() {
 			return err
 		}
 
-		log.Println(br.Id(), br.Name())
+		is_current, err := br.IsCurrent()
+
+		if err != nil {
+			log.Printf("failed to is_current for %s, because %s\n", path, err)
+			return err
+		}
+
+		log.Println(br.Id(), br.Name(), is_current)
 		return nil
 	}
 
